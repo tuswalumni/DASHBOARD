@@ -1,32 +1,135 @@
 <!DOCTYPE html>
-<html lang="th">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title> <link rel="icon" type="image/png" href="https://img5.pic.in.th/file/secure-sv1/cropped_circle_image09cc9731529109e7.png">
-    <style>
-        /* ตั้งค่าให้หน้าเว็บและ iframe ขยายเต็มจอ */
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            overflow: hidden; /* ซ่อน Scrollbar ของหน้าหลัก */
-        }
-        iframe {
-            display: block;
-            width: 100%;
-            height: 100vh; /* ความสูงเต็มหน้าจอ */
-            border: none;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard</title><link rel="icon" type="image/png" href="https://img5.pic.in.th/file/secure-sv1/cropped_circle_image09cc9731529109e7.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style> body { font-family: 'Sarabun', sans-serif; background-color: #f8fafc; } .font-number { font-family: 'Sarabun', sans-serif; letter-spacing: -0.02em; } </style>
 </head>
-<body>
+<body class="min-h-screen pb-20">
 
-    <iframe 
-        src="https://script.google.com/macros/s/AKfycbwBqeqG9yu5y-PCKjr5hbgevTuKVjS9oDNbDFCbhxwvj4GX4jDSNEk9tKyOh3qw-J2h/exec?page=dashboard&pw=TUADMIN2025"
-        title="Google Apps Script Dashboard">
-        เบราว์เซอร์ของคุณไม่รองรับการใช้งาน iframe
-    </iframe>
+<nav class="bg-red-800 text-white p-4 shadow-xl sticky top-0 z-50 border-b-2 border-amber-500">
+  <div class="container mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+    <div class="flex items-center space-x-3">
+       <img src="https://img2.pic.in.th/cropped_circle_image4abd3ce094449065.png" class="w-12 h-12 bg-white rounded-full p-1 shadow-inner">
+      <div class="leading-tight"><span class="block font-extrabold text-lg uppercase">ALUMNI DASHBOARD</span><span class="block text-[10px] text-red-200 font-medium">Thammasat Social Administration</span></div>
+    </div>
+    <div class="flex gap-3">
+      <a href="https://tuswalumni.github.io/MemberList" class="px-4 py-2 bg-blue-600 rounded-lg text-xs font-bold shadow-md hover:bg-blue-700">ฐานข้อมูลสมาชิก</a>
+      <button onclick="sessionStorage.clear(); window.location.href='https://tuswalumni.github.io/MemberList';" class="px-4 py-2 bg-red-900/50 rounded-lg text-xs font-bold border hover:bg-red-900/80 flex items-center gap-1"><i data-lucide="log-out" class="w-3 h-3"></i> ออกจากระบบ</button>
+    </div>
+  </div>
+</nav>
 
+<div class="container mx-auto px-4 py-12 max-w-6xl">
+    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-12 gap-6 border-b pb-10">
+      <div><h1 class="text-4xl font-extrabold text-slate-800 mb-2">สถิติข้อมูลสมาชิก</h1><p id="updateTime" class="text-sm text-slate-500 flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4"></i> รอการอัปเดต...</p></div>
+      <div class="flex flex-wrap items-end gap-3">
+        <div><label class="text-[10px] font-bold text-slate-400 uppercase">ปีงบประมาณ</label><select id="yearFilter" onchange="updateDashboard()" class="block w-32 px-3 py-2 border rounded-xl font-bold bg-white outline-none"></select></div>
+        <div>
+          <label class="text-[10px] font-bold text-slate-400 uppercase">เดือน</label>
+          <select id="monthFilter" onchange="updateDashboard()" class="block w-40 px-3 py-2 border rounded-xl font-bold bg-white outline-none">
+            <option value="ALL">ทุกเดือน (รายปี)</option><option value="0">มกราคม</option><option value="1">กุมภาพันธ์</option><option value="2">มีนาคม</option><option value="3">เมษายน</option><option value="4">พฤษภาคม</option><option value="5">มิถุนายน</option><option value="6">กรกฎาคม</option><option value="7">สิงหาคม</option><option value="8">กันยายน</option><option value="9">ตุลาคม</option><option value="10">พฤศจิกายน</option><option value="11">ธันวาคม</option>
+          </select>
+        </div>
+        <button onclick="updateDashboard()" class="p-2.5 bg-white border rounded-xl hover:shadow-md text-slate-600"><i data-lucide="refresh-cw" class="w-5 h-5"></i></button>
+        <button onclick="printReport()" class="px-5 py-2.5 bg-slate-900 text-white rounded-xl shadow-lg hover:bg-black font-bold flex items-center gap-2"><i data-lucide="printer" class="w-4 h-4"></i> พิมพ์ PDF</button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div class="bg-gradient-to-br from-red-700 to-red-900 rounded-[2rem] p-8 text-white shadow-xl relative overflow-hidden"><h3 class="font-bold text-sm uppercase opacity-80">สมาชิกสามัญ</h3><p id="statOrdinary" class="text-7xl font-black font-number mt-2">0</p><i data-lucide="users" class="absolute -right-4 -bottom-4 w-32 h-32 opacity-10"></i></div>
+      <div class="bg-gradient-to-br from-blue-700 to-blue-900 rounded-[2rem] p-8 text-white shadow-xl relative overflow-hidden"><h3 class="font-bold text-sm uppercase opacity-80">สมาชิกสมทบ</h3><p id="statAssociate" class="text-7xl font-black font-number mt-2">0</p><i data-lucide="user-check" class="absolute -right-4 -bottom-4 w-32 h-32 opacity-10"></i></div>
+      <div class="bg-gradient-to-br from-emerald-600 to-emerald-800 rounded-[2rem] p-8 text-white shadow-xl relative overflow-hidden"><h3 class="font-bold text-sm uppercase opacity-80">กิตติมศักดิ์</h3><p id="statHonorary" class="text-7xl font-black font-number mt-2">0</p><i data-lucide="award" class="absolute -right-4 -bottom-4 w-32 h-32 opacity-10"></i></div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2 space-y-8">
+        <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border flex flex-col min-h-[400px]">
+           <h3 class="text-xl font-extrabold text-slate-800 mb-6">สัดส่วนสมาชิก</h3>
+           <div class="flex-grow relative"><canvas id="memberChart"></canvas></div>
+        </div>
+        <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border flex flex-col min-h-[400px]">
+            <h3 class="text-xl font-extrabold text-slate-800 mb-6">แจกแจงรายรับรายเดือน</h3>
+            <div class="flex-grow relative h-64"><canvas id="revenueMonthlyChart"></canvas></div>
+        </div>
+      </div>
+      <div class="lg:col-span-1 space-y-6">
+        <div class="bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden">
+          <h3 class="text-amber-400 font-bold text-xs uppercase mb-2">รายรับรวม (Verified)</h3><span class="text-5xl font-black font-number" id="totalRevenue">0</span><span class="text-lg font-bold ml-2">THB</span>
+          <div class="absolute right-0 top-0 p-6 opacity-10"><i data-lucide="banknote" class="w-24 h-24"></i></div>
+        </div>
+        <div class="bg-white rounded-[2rem] shadow-lg border p-6 space-y-6">
+           <div class="flex justify-between items-center"><div><p class="text-xs font-bold text-slate-400 uppercase">รายรับสามัญ</p><p class="text-2xl font-black text-slate-700" id="ordRevText">0</p></div><div class="p-3 bg-red-50 text-red-500 rounded-xl"><i data-lucide="user-plus" class="w-6 h-6"></i></div></div>
+           <div class="flex justify-between items-center border-t pt-6"><div><p class="text-xs font-bold text-slate-400 uppercase">รายรับสมทบ</p><p class="text-2xl font-black text-slate-700" id="ascRevText">0</p></div><div class="p-3 bg-blue-50 text-blue-500 rounded-xl"><i data-lucide="refresh-cw" class="w-6 h-6"></i></div></div>
+        </div>
+        <div class="bg-orange-50 rounded-[2rem] p-6 border border-orange-100 flex items-center justify-between">
+           <div><p class="text-xs font-bold text-orange-400 uppercase">สมาชิกหมดอายุ</p><p class="text-3xl font-black text-orange-600" id="expiredCount">0</p></div><i data-lucide="clock" class="w-8 h-8 text-orange-300"></i>
+        </div>
+      </div>
+    </div>
+</div>
+
+<script>
+  Chart.register(ChartDataLabels);
+  const API_URL = "https://script.google.com/macros/s/AKfycbwBqeqG9yu5y-PCKjr5hbgevTuKVjS9oDNbDFCbhxwvj4GX4jDSNEk9tKyOh3qw-J2h/exec";
+  let myChart = null, myBarChart = null;
+
+  async function callAPI(action, payload = {}) {
+    const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action, payload }) });
+    const data = await res.json(); if (!data.success) throw new Error(data.message); return data;
+  }
+
+  window.onload = function() {
+    lucide.createIcons();
+    if (!sessionStorage.getItem('adminToken')) { Swal.fire('ปฏิเสธการเข้าถึง', 'กรุณาล็อกอินผ่านระบบจัดการสมาชิกก่อน', 'error').then(()=>window.location.href="https://tuswalumni.github.io/MemberList"); return; }
+    const sel = document.getElementById('yearFilter'); sel.add(new Option("ข้อมูลทั้งหมด", "ALL"));
+    for (let i = 0; i < 5; i++) { const y = new Date().getFullYear() - i; sel.add(new Option("ปี " + (y + 543), y)); }
+    updateDashboard();
+  };
+
+  async function updateDashboard() {
+    const y = document.getElementById('yearFilter').value, m = document.getElementById('monthFilter').value;
+    document.getElementById('updateTime').innerHTML = '<span class="italic animate-pulse">กำลังประมวลผล...</span>';
+    try {
+      const res = await callAPI('getDashboardData', { selectedYear: y, selectedMonth: m });
+      const data = res.data;
+      document.getElementById('updateTime').innerHTML = `<i data-lucide="check-circle" class="w-4 h-4 text-emerald-500"></i> อัปเดตล่าสุด: ${data.lastUpdate}`;
+      ['statOrdinary','statAssociate','statHonorary','totalRevenue','ordRevText','ascRevText','expiredCount'].forEach(id => {
+         document.getElementById(id).innerText = Number(data[id.replace('statOrdinary','ord').replace('statAssociate','asc').replace('statHonorary','hon').replace('ordRevText','ordPaidRevenue').replace('ascRevText','ascPaidRevenue').replace('expiredCount','expired')] || 0).toLocaleString('th-TH');
+      });
+      renderChart(data.ord, data.asc, data.hon, data.expired);
+      if(data.monthlyRevenue) renderRevenueMonthlyChart(data.monthlyRevenue);
+      lucide.createIcons();
+    } catch (err) { document.getElementById('updateTime').innerHTML = `<span class="text-red-500 font-bold">Error: ${err.message}</span>`; }
+  }
+
+  function renderChart(ord, asc, hon, exp) {
+    if(myChart) myChart.destroy();
+    myChart = new Chart(document.getElementById('memberChart').getContext('2d'), {
+      type: 'doughnut', data: { labels: ['สามัญ', 'สมทบ', 'กิตติมศักดิ์', 'หมดอายุ'], datasets: [{ data: [ord, asc, hon, exp], backgroundColor: ['#b91c1c', '#1d4ed8', '#059669', '#f97316'], borderWidth: 0 }] },
+      options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right' }, datalabels: { color: '#fff', font: {family: 'Sarabun', weight: 'bold'} } } }
+    });
+  }
+  function renderRevenueMonthlyChart(data) {
+    if(myBarChart) myBarChart.destroy();
+    myBarChart = new Chart(document.getElementById('revenueMonthlyChart').getContext('2d'), {
+      type: 'bar', data: { labels: ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'], datasets: [{ label: 'รายรับ (บาท)', data: data, backgroundColor: '#1e293b', borderRadius: 10 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } } }
+    });
+  }
+  async function printReport() {
+    Swal.fire({ title: 'กำลังสร้าง PDF...', didOpen: () => Swal.showLoading() });
+    try {
+      const res = await callAPI('generateDashboardPDF', { year: document.getElementById('yearFilter').value, month: document.getElementById('monthFilter').value });
+      Swal.close(); const link = document.createElement('a'); link.href = "data:application/pdf;base64," + res.base64; link.download = res.filename; link.click();
+    } catch (err) { Swal.fire('Error', err.message, 'error'); }
+  }
+</script>
 </body>
 </html>
