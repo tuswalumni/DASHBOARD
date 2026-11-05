@@ -1,183 +1,236 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>สถิติข้อมูลสมาชิก (Admin Dashboard)</title><link rel="icon" type="image/png" href="https://i.ibb.co/vxYZTPhj/cropped-circle-image.png">
+  <title>สถิติข้อมูลสมาชิก (Admin Dashboard)</title>
+  <link rel="icon" type="image/png" href="https://img2.pic.in.th/cropped_circle_image4abd3ce094449065.png">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: {
+      colors: {
+        brand: { 50:'#fbf3f2', 100:'#f5e1df', 200:'#e9c2be', 600:'#9a2a2c', 700:'#7d1f22', 800:'#621719', 900:'#45100f' },
+        gold:  { 50:'#fbf6ea', 100:'#f6ecd6', 300:'#e2c27f', 400:'#d4a84b', 600:'#a97c22', 700:'#8a6418' },
+        navy:  { 50:'#eef3f8', 600:'#2f5d8a', 700:'#244a6f' },
+        sage:  { 50:'#edf6f1', 600:'#2f7a5a', 700:'#245f46' },
+        paper:'#f6f3ee', line:'#e6dfd5', ink:'#221c18', muted:'#6e655d'
+      },
+      fontFamily: { sans: ['"IBM Plex Sans Thai"', 'Sarabun', 'sans-serif'] }
+    } } };
+  </script>
+  <style type="text/tailwindcss">
+    @layer components {
+      .card { @apply bg-white rounded-2xl border border-line shadow-[0_1px_2px_rgba(34,28,24,.04),0_12px_32px_-16px_rgba(34,28,24,.10)]; }
+      .sel { @apply block rounded-lg border border-line bg-white px-3 py-2.5 font-medium text-ink outline-none focus:border-brand-600 focus:ring-4 focus:ring-brand-600/10; }
+      .navbtn { @apply inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium transition; }
+      .stat-num { @apply text-5xl md:text-6xl font-bold tabular-nums tracking-tight mt-3; }
+    }
+  </style>
+  <style>
+    body { -webkit-font-smoothing: antialiased; }
+    .hidden { display: none; }
+    .animate-fadeIn { animation: fadeIn .45s ease-out both; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    .swal2-popup { font-family: 'IBM Plex Sans Thai', Sarabun, sans-serif !important; border-radius: 18px !important; }
+    .swal2-styled { border-radius: 10px !important; font-weight: 600 !important; }
+    a { color: #7d1f22; } a:hover { color: #45100f; }
+  </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  
-  <style>
-    body { font-family: 'Sarabun', sans-serif; background-color: #f8fafc; }
-    .animate-fadeIn { animation: fadeIn 0.6s ease-out forwards; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    .stat-card { transition: all 0.3s; }
-    .stat-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
-    .font-number { font-family: 'Sarabun', sans-serif; letter-spacing: -0.02em; }
-  </style>
 </head>
-<body class="min-h-screen pb-20">
+<body class="bg-paper text-ink font-sans min-h-screen pb-16">
 
-<nav class="bg-red-800 text-white p-4 shadow-xl sticky top-0 z-50 border-b-2 border-amber-500">
-  <div class="container mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-    <div class="flex items-center space-x-3 cursor-pointer" onclick="adminNavigate('dashboard')">
-       <img src="https://i.ibb.co/vxYZTPhj/cropped-circle-image.png" class="w-12 h-12 bg-white rounded-full p-1 shadow-inner">
-      <div class="leading-tight">
-        <span class="block font-extrabold text-lg uppercase">ALUMNI DASHBOARD</span>
-        <span class="block text-[10px] text-red-200 font-medium">Thammasat Social Administration</span>
-      </div>
+<header class="bg-ink text-white sticky top-0 z-50">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
+    <button type="button" class="flex items-center gap-3 text-left" onclick="adminNavigate('dashboard')">
+      <img src="https://img2.pic.in.th/cropped_circle_image4abd3ce094449065.png" class="w-10 h-10 bg-white rounded-full p-0.5" alt="">
+      <span class="leading-tight">
+        <span class="block font-semibold">Alumni Dashboard</span>
+        <span class="block text-[11px] text-white/50">สมาคมนักศึกษาเก่าสังคมสงเคราะห์ศาสตร์ มธ.</span>
+      </span>
+    </button>
+    <nav class="flex flex-wrap gap-1.5">
+      <button onclick="adminNavigate('members')" class="navbtn bg-white/10 hover:bg-white/20"><i data-lucide="users" class="w-4 h-4"></i> ฐานข้อมูลสมาชิก</button>
+      <button onclick="showSystemToolsMenu()" class="navbtn bg-gold-400 text-ink hover:bg-gold-300"><i data-lucide="settings" class="w-4 h-4"></i> เครื่องมือระบบ</button>
+      <a href="https://members.tuswalumni.com/" target="_top" class="navbtn !text-white/80 hover:!text-white hover:bg-white/10 no-underline"><i data-lucide="globe" class="w-4 h-4"></i> หน้าหลัก</a>
+      <button onclick="adminLogout()" class="navbtn text-white/80 hover:bg-brand-700 hover:text-white"><i data-lucide="log-out" class="w-4 h-4"></i> ออกจากระบบ</button>
+    </nav>
+  </div>
+  <div class="h-px bg-gold-400/60"></div>
+</header>
+
+<div class="max-w-6xl mx-auto px-4 py-10 animate-fadeIn">
+
+  <div class="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 mb-8">
+    <div>
+      <p class="text-[13px] font-semibold text-gold-700" id="adminGreeting">ภาพรวม</p>
+      <h1 class="text-3xl md:text-4xl font-bold mt-1">สถิติข้อมูลสมาชิก</h1>
+      <p id="updateTime" class="text-sm text-muted flex items-center gap-2 mt-2"><i data-lucide="clock" class="w-4 h-4"></i> รอการอัปเดต...</p>
     </div>
-    <div class="flex gap-3">
-      <button onclick="adminNavigate('members')" class="px-4 py-2 bg-blue-600 rounded-lg text-xs font-bold shadow-md hover:bg-blue-700">ฐานข้อมูลสมาชิก</button>
-      <button onclick="showSystemToolsMenu()" class="px-4 py-2 bg-amber-600 rounded-lg text-xs font-bold shadow-md hover:bg-amber-700 flex items-center gap-1"><i data-lucide="settings" class="w-3 h-3"></i> เครื่องมือระบบ</button>
-      <a href="https://members.tuswalumni.com/" target="_top" class="px-4 py-2 bg-white/10 rounded-lg text-xs font-bold border border-white/30 hover:bg-white/20">หน้าหลัก</a>
-      <button onclick="adminLogout()" class="px-4 py-2 bg-red-900/50 rounded-lg text-xs font-bold border border-red-400/30 hover:bg-red-900/80 flex items-center gap-1"><i data-lucide="log-out" class="w-3 h-3"></i> ออกจากระบบ</button>
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <label for="yearFilter" class="text-xs font-medium text-muted ml-0.5">ปีงบประมาณ</label>
+        <select id="yearFilter" onchange="updateDashboard()" class="sel w-40 mt-1"></select>
+      </div>
+      <div>
+        <label for="monthFilter" class="text-xs font-medium text-muted ml-0.5">เดือน</label>
+        <select id="monthFilter" onchange="updateDashboard()" class="sel w-44 mt-1">
+          <option value="ALL">ทุกเดือน (รายปี)</option>
+          <option value="0">มกราคม</option><option value="1">กุมภาพันธ์</option>
+          <option value="2">มีนาคม</option><option value="3">เมษายน</option>
+          <option value="4">พฤษภาคม</option><option value="5">มิถุนายน</option>
+          <option value="6">กรกฎาคม</option><option value="7">สิงหาคม</option>
+          <option value="8">กันยายน</option><option value="9">ตุลาคม</option>
+          <option value="10">พฤศจิกายน</option><option value="11">ธันวาคม</option>
+        </select>
+      </div>
+      <button onclick="updateDashboard()" id="btnRefresh" title="รีเฟรช" class="p-2.5 bg-white border border-line rounded-lg hover:bg-paper text-muted transition">
+        <i data-lucide="refresh-cw" class="w-5 h-5" id="iconRefresh"></i>
+      </button>
+      <button onclick="printReport()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-brand-700 text-white rounded-lg font-semibold hover:bg-brand-800 transition">
+        <i data-lucide="printer" class="w-4 h-4"></i> พิมพ์ PDF
+      </button>
     </div>
   </div>
-</nav>
 
-<div class="container mx-auto px-4 py-12 max-w-6xl animate-fadeIn">
-    
-    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-12 gap-6 border-b border-slate-200 pb-10">
-      <div>
-        <h1 class="text-4xl font-extrabold text-slate-800 mb-2">สถิติข้อมูลสมาชิก</h1>
-        <p id="updateTime" class="text-sm text-slate-500 flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4"></i> รอการอัปเดต...</p>
-      </div>
-      
-      <div class="flex flex-wrap items-end gap-3">
-        <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">ปีงบประมาณ</label>
-          <select id="yearFilter" onchange="updateDashboard()" class="block w-32 px-3 py-2 border rounded-xl text-slate-700 font-bold bg-white focus:ring-2 focus:ring-red-500 outline-none transition-all"></select>
-        </div>
-        <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">เดือน</label>
-          <select id="monthFilter" onchange="updateDashboard()" class="block w-40 px-3 py-2 border rounded-xl text-slate-700 font-bold bg-white focus:ring-2 focus:ring-red-500 outline-none transition-all">
-            <option value="ALL">ทุกเดือน (รายปี)</option>
-            <option value="0">มกราคม</option><option value="1">กุมภาพันธ์</option>
-            <option value="2">มีนาคม</option><option value="3">เมษายน</option>
-            <option value="4">พฤษภาคม</option><option value="5">มิถุนายน</option>
-            <option value="6">กรกฎาคม</option><option value="7">สิงหาคม</option>
-            <option value="8">กันยายน</option><option value="9">ตุลาคม</option>
-            <option value="10">พฤศจิกายน</option><option value="11">ธันวาคม</option>
-          </select>
-        </div>
-        <div class="flex gap-2">
-          <button onclick="updateDashboard()" id="btnRefresh" class="p-2.5 bg-white border border-slate-200 rounded-xl hover:shadow-md text-slate-600 transition-all active:scale-90">
-              <i data-lucide="refresh-cw" class="w-5 h-5" id="iconRefresh"></i>
-          </button>
-          <button onclick="printReport()" class="px-5 py-2.5 bg-slate-900 text-white rounded-xl shadow-lg hover:bg-black font-bold flex items-center gap-2 transition-all transform hover:-translate-y-1 active:scale-95 whitespace-nowrap">
-              <i data-lucide="printer" class="w-4 h-4"></i> พิมพ์ PDF
-          </button>
-        </div>
-      </div>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="card p-6 relative overflow-hidden">
+      <div class="absolute inset-x-0 top-0 h-1 bg-brand-700"></div>
+      <p class="flex items-center gap-2 text-sm font-medium text-muted"><span class="w-2 h-2 rounded-full bg-brand-700"></span> สมาชิกสามัญ</p>
+      <p id="statOrdinary" class="stat-num text-brand-700">0</p>
     </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-      <div class="stat-card bg-gradient-to-br from-red-700 to-red-900 rounded-[2rem] p-8 text-white shadow-xl relative overflow-hidden">
-        <h3 class="text-red-100 font-bold text-sm uppercase opacity-80">สมาชิกสามัญ</h3>
-        <p id="statOrdinary" class="text-7xl font-black font-number mt-2">0</p>
-        <i data-lucide="users" class="absolute -right-4 -bottom-4 w-32 h-32 opacity-10"></i>
-      </div>
-      <div class="stat-card bg-gradient-to-br from-blue-700 to-blue-900 rounded-[2rem] p-8 text-white shadow-xl relative overflow-hidden">
-        <h3 class="text-blue-100 font-bold text-sm uppercase opacity-80">สมาชิกสมทบ</h3>
-        <p id="statAssociate" class="text-7xl font-black font-number mt-2">0</p>
-        <i data-lucide="user-check" class="absolute -right-4 -bottom-4 w-32 h-32 opacity-10"></i>
-      </div>
-      <div class="stat-card bg-gradient-to-br from-emerald-600 to-emerald-800 rounded-[2rem] p-8 text-white shadow-xl relative overflow-hidden">
-        <h3 class="text-emerald-100 font-bold text-sm uppercase opacity-80">กิตติมศักดิ์</h3>
-        <p id="statHonorary" class="text-7xl font-black font-number mt-2">0</p>
-        <i data-lucide="award" class="absolute -right-4 -bottom-4 w-32 h-32 opacity-10"></i>
-      </div>
+    <div class="card p-6 relative overflow-hidden">
+      <div class="absolute inset-x-0 top-0 h-1 bg-navy-600"></div>
+      <p class="flex items-center gap-2 text-sm font-medium text-muted"><span class="w-2 h-2 rounded-full bg-navy-600"></span> สมาชิกสมทบ</p>
+      <p id="statAssociate" class="stat-num text-navy-700">0</p>
     </div>
+    <div class="card p-6 relative overflow-hidden">
+      <div class="absolute inset-x-0 top-0 h-1 bg-sage-600"></div>
+      <p class="flex items-center gap-2 text-sm font-medium text-muted"><span class="w-2 h-2 rounded-full bg-sage-600"></span> กิตติมศักดิ์</p>
+      <p id="statHonorary" class="stat-num text-sage-700">0</p>
+    </div>
+    <div class="card p-6 relative overflow-hidden">
+      <div class="absolute inset-x-0 top-0 h-1 bg-gold-400"></div>
+      <p class="flex items-center gap-2 text-sm font-medium text-muted"><span class="w-2 h-2 rounded-full bg-gold-400"></span> สมาชิกหมดอายุ</p>
+      <p id="expiredCount" class="stat-num text-gold-700">0</p>
+    </div>
+  </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      
-      <div class="lg:col-span-2 space-y-8">
-        <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100 flex flex-col min-h-[400px]">
-           <div class="flex justify-between items-center mb-6">
-             <h3 class="text-xl font-extrabold text-slate-800">สัดส่วนสมาชิก</h3>
-             <span class="text-xs font-bold bg-slate-100 text-slate-500 px-3 py-1 rounded-full chartYearText">...</span>
-           </div>
-           <div class="flex-grow relative">
-             <canvas id="memberChart"></canvas>
-           </div>
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2 space-y-6">
+      <div class="card p-6 md:p-7 flex flex-col min-h-[360px]">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-semibold">สัดส่วนสมาชิก</h3>
+          <span class="text-xs font-medium bg-paper text-muted px-3 py-1 rounded-full chartYearText">...</span>
         </div>
-
-        <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100 flex flex-col min-h-[400px]">
-            <div class="flex justify-between items-center mb-6">
-                <div>
-                    <h3 class="text-xl font-extrabold text-slate-800">แจกแจงรายรับรายเดือน</h3>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Monthly Revenue Distribution</p>
-                </div>
-                <span class="text-xs font-bold bg-slate-100 text-slate-500 px-3 py-1 rounded-full chartYearText">...</span>
-            </div>
-            <div class="flex-grow relative h-64">
-                <canvas id="revenueMonthlyChart"></canvas>
-            </div>
-        </div>
+        <div class="flex-grow relative min-h-[280px]"><canvas id="memberChart"></canvas></div>
       </div>
-
-      <div class="lg:col-span-1 space-y-6">
-        <div class="bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden">
-          <div class="relative z-10">
-            <h3 class="text-amber-400 font-bold text-xs uppercase tracking-widest mb-2">รายรับรวม (Verified)</h3>
-            <span class="text-5xl font-black font-number tracking-tighter" id="totalRevenue">0</span>
-            <span class="text-lg text-slate-500 font-bold ml-2">THB</span>
+      <div class="card p-6 md:p-7 flex flex-col min-h-[360px]">
+        <div class="flex justify-between items-center mb-4">
+          <div>
+            <h3 class="text-lg font-semibold">แจกแจงรายรับรายเดือน</h3>
+            <p class="text-xs text-muted mt-0.5">อ้างอิงวันที่แนบสลิป</p>
           </div>
-          <div class="absolute right-0 top-0 p-6 opacity-10"><i data-lucide="banknote" class="w-24 h-24"></i></div>
+          <span class="text-xs font-medium bg-paper text-muted px-3 py-1 rounded-full chartYearText">...</span>
         </div>
-
-        <div class="bg-white rounded-[2rem] shadow-lg border border-slate-100 p-6 space-y-6">
-           <div class="flex justify-between items-center">
-             <div>
-                <p class="text-xs font-bold text-slate-400 uppercase">รายรับ: สมาชิกสามัญ</p>
-                <p class="text-2xl font-black text-slate-700" id="ordRevText">0</p>
-             </div>
-             <div class="p-3 bg-red-50 text-red-500 rounded-xl"><i data-lucide="user-plus" class="w-6 h-6"></i></div>
-           </div>
-           <div class="flex justify-between items-center border-t border-slate-50 pt-6">
-             <div>
-                <p class="text-xs font-bold text-slate-400 uppercase">รายรับ: สมทบ/ต่ออายุ</p>
-                <p class="text-2xl font-black text-slate-700" id="ascRevText">0</p>
-             </div>
-             <div class="p-3 bg-blue-50 text-blue-500 rounded-xl"><i data-lucide="refresh-cw" class="w-6 h-6"></i></div>
-           </div>
-        </div>
-        
-        <div class="bg-orange-50 rounded-[2rem] p-6 border border-orange-100 flex items-center justify-between">
-           <div>
-             <p class="text-xs font-bold text-orange-400 uppercase">สมาชิกหมดอายุ</p>
-             <p class="text-3xl font-black text-orange-600" id="expiredCount">0</p>
-           </div>
-           <i data-lucide="clock" class="w-8 h-8 text-orange-300"></i>
-        </div>
+        <div class="flex-grow relative h-64"><canvas id="revenueMonthlyChart"></canvas></div>
       </div>
     </div>
 
+    <div class="space-y-6">
+      <div class="rounded-2xl p-7 bg-brand-800 text-white relative overflow-hidden">
+        <div class="absolute inset-x-0 top-0 h-1 bg-gold-400"></div>
+        <p class="text-sm font-medium text-gold-300">รายรับรวม (Verified)</p>
+        <p class="mt-3"><span class="text-5xl font-bold tabular-nums tracking-tight" id="totalRevenue">0</span> <span class="text-base text-white/50 font-medium">บาท</span></p>
+      </div>
+      <div class="card divide-y divide-line">
+        <div class="flex justify-between items-center p-6">
+          <div>
+            <p class="text-sm text-muted">รายรับ: สมาชิกสามัญ</p>
+            <p class="text-2xl font-semibold tabular-nums mt-0.5" id="ordRevText">0</p>
+          </div>
+          <div class="p-2.5 bg-brand-50 text-brand-700 rounded-lg"><i data-lucide="user-plus" class="w-5 h-5"></i></div>
+        </div>
+        <div class="flex justify-between items-center p-6">
+          <div>
+            <p class="text-sm text-muted">รายรับ: สมทบ/ต่ออายุ</p>
+            <p class="text-2xl font-semibold tabular-nums mt-0.5" id="ascRevText">0</p>
+          </div>
+          <div class="p-2.5 bg-navy-50 text-navy-600 rounded-lg"><i data-lucide="refresh-cw" class="w-5 h-5"></i></div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script src="api-client.js"></script>
 <script>
-  // ✅ ตั้งค่า URL ของเว็บอื่นๆ ในระบบ (คนละ Repo/Domain) — แก้ให้ตรงกับ URL จริงหลัง Deploy
+  // URL ของเว็บอื่นๆ ในระบบ (คนละ Repo/Domain)
   const ADMIN_URLS = {
     memberList: "https://memberlist.tuswalumni.com/",
     dashboard: "https://dashboard.tuswalumni.com/",
   };
+  const PALETTE = { ord: '#7d1f22', asc: '#2f5d8a', hon: '#2f7a5a', exp: '#d4a84b' };
 
   let myChart = null;
   let myBarChart = null;
-  
+
   if (typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
+  if (typeof Chart !== 'undefined') { Chart.defaults.font.family = "'IBM Plex Sans Thai', Sarabun, sans-serif"; Chart.defaults.color = '#6e655d'; }
 
   window.onload = function() {
     lucide.createIcons();
     setupYearFilter();
-    updateDashboard();
+    requireAdmin(() => updateDashboard());
   };
+
+  // ✅ ใหม่: หน้านี้เดิมเปิดดูได้ทันทีโดยไม่ต้องเข้าสู่ระบบ — เพิ่มการล็อกอินแบบเดียวกับ MemberList
+  // (sessionStorage แยกตามโดเมน จึงต้องล็อกอินที่หน้านี้แยกอีกครั้ง)
+  function requireAdmin(onReady) {
+    const savedToken = sessionStorage.getItem('adminToken');
+    const savedName = sessionStorage.getItem('adminName');
+    if (savedToken && savedName) { setGreeting(savedName); onReady(); return; }
+
+    Swal.fire({
+      title: 'เข้าสู่ระบบผู้ดูแล',
+      html: `<div class="space-y-3 text-left pt-1">
+               <div><label class="text-xs font-medium text-muted">Username</label><input id="swal-username" class="w-full mt-1 rounded-lg border border-line px-3.5 py-2.5 outline-none focus:border-brand-600" placeholder="ระบุชื่อผู้ใช้" onkeydown="if(event.key==='Enter') document.querySelector('.swal2-confirm').click()"></div>
+               <div><label class="text-xs font-medium text-muted">Password</label><input id="swal-password" type="password" class="w-full mt-1 rounded-lg border border-line px-3.5 py-2.5 outline-none focus:border-brand-600" placeholder="ระบุรหัสผ่าน" onkeydown="if(event.key==='Enter') document.querySelector('.swal2-confirm').click()"></div>
+             </div>`,
+      focusConfirm: false, allowOutsideClick: false, allowEscapeKey: false,
+      confirmButtonText: 'เข้าสู่ระบบ', confirmButtonColor: '#7d1f22',
+      backdrop: 'rgba(34,28,24,.85)',
+      preConfirm: () => {
+        const user = document.getElementById('swal-username').value.trim();
+        const pass = document.getElementById('swal-password').value.trim();
+        if (!user || !pass) return Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบถ้วน');
+        return { user, pass };
+      }
+    }).then((result) => {
+      if (!result.isConfirmed) return;
+      Swal.fire({ title: 'กำลังตรวจสอบสิทธิ์...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      TUSW_API.call('adminLoginWithToken', { u: result.value.user, p: result.value.pass }).then(res => {
+        if (res.success) {
+          sessionStorage.setItem('adminToken', res.token);
+          sessionStorage.setItem('adminName', res.adminName);
+          setGreeting(res.adminName);
+          Swal.fire({ icon: 'success', title: 'ยินดีต้อนรับ', text: 'คุณ' + res.adminName, timer: 1200, showConfirmButton: false });
+          onReady();
+        } else {
+          Swal.fire({ icon: 'error', title: 'เข้าสู่ระบบไม่สำเร็จ', text: res.message, confirmButtonColor: '#7d1f22' }).then(() => requireAdmin(onReady));
+        }
+      }).catch(err => {
+        Swal.fire({ icon: 'error', title: 'เชื่อมต่อไม่ได้', text: err.message, confirmButtonColor: '#7d1f22' }).then(() => requireAdmin(onReady));
+      });
+    });
+  }
+  function setGreeting(name) {
+    const el = document.getElementById('adminGreeting');
+    if (el) el.textContent = 'ภาพรวม · ผู้ดูแล: ' + name;
+  }
 
   function setupYearFilter() {
     const currentYear = new Date().getFullYear();
@@ -191,25 +244,24 @@
 
   function updateDashboard() {
     const selectedYear = document.getElementById('yearFilter').value;
-    const selectedMonth = document.getElementById('monthFilter').value; // ดึงค่าเดือนเพิ่ม
+    const selectedMonth = document.getElementById('monthFilter').value;
     const updateLabel = document.getElementById('updateTime');
     const icon = document.getElementById('iconRefresh');
 
-    if(icon) icon.classList.add('animate-spin');
-    updateLabel.innerHTML = '<span class="italic animate-pulse">กำลังประมวลผลข้อมูล...</span>';
+    if (icon) icon.classList.add('animate-spin');
+    updateLabel.innerHTML = '<span class="animate-pulse">กำลังประมวลผลข้อมูล...</span>';
 
-    // ส่งทั้งปีและเดือนไปที่ Server
     TUSW_API.call('getDashboardData', { selectedYear: selectedYear, selectedMonth: selectedMonth })
       .then(data => {
-        if(icon) icon.classList.remove('animate-spin');
-        updateLabel.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4 text-emerald-500"></i> อัปเดตล่าสุด: ${data.lastUpdate}`;
-        
-        // อัปเดตข้อความปี/เดือนบนกราฟ
-        const yearText = selectedYear === "ALL" ? "ทั้งหมด" : parseInt(selectedYear)+543;
-        const monthText = selectedMonth === "ALL" ? "" : " - " + document.getElementById('monthFilter').options[document.getElementById('monthFilter').selectedIndex].text;
+        const ic = document.getElementById('iconRefresh');
+        if (ic) ic.classList.remove('animate-spin');
+        updateLabel.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4 text-emerald-600"></i> อัปเดตล่าสุด: ${data.lastUpdate}`;
+
+        const yearText = selectedYear === "ALL" ? "ทั้งหมด" : parseInt(selectedYear) + 543;
+        const mSel = document.getElementById('monthFilter');
+        const monthText = selectedMonth === "ALL" ? "" : " - " + mSel.options[mSel.selectedIndex].text;
         document.querySelectorAll('.chartYearText').forEach(el => el.innerText = yearText + monthText);
 
-        // อัปเดตตัวเลขสถิติ
         animateValue("statOrdinary", data.ord);
         animateValue("statAssociate", data.asc);
         animateValue("statHonorary", data.hon);
@@ -218,114 +270,77 @@
         animateValue("ascRevText", data.ascPaidRevenue);
         animateValue("expiredCount", data.expired);
 
-        // วาดกราฟ Doughnut (สัดส่วน)
         renderChart(data.ord, data.asc, data.hon, data.expired);
-        
-        // วาดกราฟ Bar (แสดงผลรายเดือน 12 แท่ง เฉพาะตอนเลือก "ทุกเดือน")
-        if(data.monthlyRevenue) {
-            renderRevenueMonthlyChart(data.monthlyRevenue);
-        }
-
+        if (data.monthlyRevenue) renderRevenueMonthlyChart(data.monthlyRevenue);
         lucide.createIcons();
       })
       .catch(err => {
-        if(icon) icon.classList.remove('animate-spin');
-        updateLabel.innerHTML = `<span class="text-red-500 font-bold">Error: ${err.message}</span>`;
+        const ic = document.getElementById('iconRefresh');
+        if (ic) ic.classList.remove('animate-spin');
+        updateLabel.innerHTML = `<span class="text-brand-700 font-semibold">Error: ${err.message}</span>`;
       });
-}
+  }
 
-  // --- ฟังก์ชันแสดงผลตัวเลข (รวมชุดเดียว) ---
+  // นับตัวเลขขึ้นแบบนุ่มนวล
   function animateValue(id, end) {
     const obj = document.getElementById(id);
     if (!obj) return;
     const finalValue = Number(end) || 0;
-    obj.innerText = finalValue.toLocaleString('th-TH');
+    const start = Number(String(obj.innerText).replace(/[^0-9.-]/g, '')) || 0;
+    if (start === finalValue || window.matchMedia('(prefers-reduced-motion: reduce)').matches) { obj.innerText = finalValue.toLocaleString('th-TH'); return; }
+    const t0 = performance.now(), dur = 600;
+    const step = (t) => {
+      const p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+      obj.innerText = Math.round(start + (finalValue - start) * e).toLocaleString('th-TH');
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
   }
 
-  // --- กราฟสัดส่วนสมาชิก ---
   function renderChart(ord, asc, hon, expired) {
     const ctx = document.getElementById('memberChart').getContext('2d');
     if (myChart) myChart.destroy();
-
     const total = ord + asc + hon + expired;
-    
     myChart = new Chart(ctx, {
       type: 'doughnut',
       data: {
         labels: ['สามัญ', 'สมทบ', 'กิตติมศักดิ์', 'หมดอายุ'],
-        datasets: [{
-          data: [ord, asc, hon, expired],
-          backgroundColor: ['#b91c1c', '#1d4ed8', '#059669', '#f97316'],
-          borderWidth: 0,
-          hoverOffset: 20
-        }]
+        datasets: [{ data: [ord, asc, hon, expired], backgroundColor: [PALETTE.ord, PALETTE.asc, PALETTE.hon, PALETTE.exp], borderWidth: 3, borderColor: '#fff', hoverOffset: 12 }]
       },
       options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: '70%',
-        layout: { padding: 20 },
+        responsive: true, maintainAspectRatio: false, cutout: '68%', layout: { padding: 12 },
         plugins: {
-          legend: { 
-            position: 'right', 
-            labels: { font: { family: 'Sarabun', size: 14 }, usePointStyle: true, padding: 20 } 
-          },
-          datalabels: {
-              color: '#fff',
-              font: { family: 'Sarabun', weight: 'bold' },
-              formatter: (val) => (total > 0 && val > 0) ? Math.round((val/total)*100) + "%" : ""
-          }
+          legend: { position: 'right', labels: { font: { size: 14 }, color: '#221c18', usePointStyle: true, pointStyle: 'circle', padding: 18 } },
+          datalabels: { color: '#fff', font: { weight: '600' }, formatter: (val) => (total > 0 && val > 0) ? Math.round((val / total) * 100) + "%" : "" }
         }
       },
       plugins: [ChartDataLabels]
     });
   }
 
-  // --- กราฟรายรับรายเดือน (ปรับปรุงใหม่) ---
   function renderRevenueMonthlyChart(monthlyData) {
     const ctx = document.getElementById('revenueMonthlyChart').getContext('2d');
     const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-    
     if (myBarChart) myBarChart.destroy();
-    
     myBarChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: months,
-            datasets: [{
-                label: 'รายรับ (บาท)',
-                data: monthlyData,
-                backgroundColor: '#1e293b',
-                hoverBackgroundColor: '#991b1b',
-                borderRadius: 10,
-                borderSkipped: false
-            }]
+      type: 'bar',
+      data: { labels: months, datasets: [{ label: 'รายรับ (บาท)', data: monthlyData, backgroundColor: '#221c18', hoverBackgroundColor: PALETTE.ord, borderRadius: 6, borderSkipped: false, maxBarThickness: 36 }] },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          datalabels: { display: false },
+          tooltip: { callbacks: { label: (c) => ` รายรับ: ${c.raw.toLocaleString()} บาท` } }
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { 
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: (context) => ` รายรับ: ${context.raw.toLocaleString()} บาท`
-                    }
-                }
-            },
-            scales: { 
-                y: { 
-                    beginAtZero: true,
-                    grid: { display: false },
-                    ticks: { callback: (val) => val.toLocaleString() }
-                },
-                x: { grid: { display: false } }
-            }
+        scales: {
+          y: { beginAtZero: true, grid: { color: '#efe9e0' }, border: { display: false }, ticks: { callback: (v) => v.toLocaleString() } },
+          x: { grid: { display: false }, border: { display: false } }
         }
+      }
     });
   }
 
   function adminNavigate(page) {
-    // ✅ ไม่ใส่ pw ใน URL อีกต่อไป — ใช้ sessionStorage token แทน (ข้าม session ระหว่างเว็บไม่ได้ เพราะคนละโดเมน ต้อง login ใหม่)
     if (page === 'members') { window.top.location.href = ADMIN_URLS.memberList; return; }
     if (page === 'dashboard') { window.top.location.href = ADMIN_URLS.dashboard; return; }
     window.top.location.href = ADMIN_URLS.memberList + "?page=" + page;
@@ -334,17 +349,16 @@
   function printReport() {
     const year = document.getElementById('yearFilter').value;
     const month = document.getElementById('monthFilter').value;
-    
-    Swal.fire({ title: 'กำลังสร้าง PDF...', didOpen: () => Swal.showLoading() });
-    
+    Swal.fire({ title: 'กำลังสร้าง PDF...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     TUSW_API.call('generateDashboardPDF', { year: year, month: month }).then(res => {
+      if (!res || !res.base64) throw new Error((res && res.message) || 'สร้างไฟล์ PDF ไม่สำเร็จ');
       Swal.close();
       const link = document.createElement('a');
       link.href = "data:application/pdf;base64," + res.base64;
       link.download = res.filename;
       link.click();
     }).catch(err => { Swal.fire('เกิดข้อผิดพลาด', err.message, 'error'); });
-}
+  }
 
   function adminLogout() {
     sessionStorage.removeItem('adminToken');
@@ -352,51 +366,42 @@
     window.top.location.href = ADMIN_URLS.memberList;
   }
 
-  // ============================================================
-  // ✅ เครื่องมือระบบ — ตั้ง Trigger อัตโนมัติ + ส่งอีเมลแจ้งเตือนซ้ำ
-  // ============================================================
+  // เครื่องมือระบบ — ตั้ง Trigger อัตโนมัติ + ส่งอีเมลแจ้งเตือนซ้ำ
   function showSystemToolsMenu() {
     Swal.fire({
-      title: '⚙️ เครื่องมือระบบ',
+      title: 'เครื่องมือระบบ',
       html: `
-        <div class="text-left space-y-4 p-2">
-          <div class="bg-blue-50 border border-blue-100 rounded-xl p-4">
-            <p class="font-bold text-sm text-blue-900 mb-1">🕐 ตั้งเวลาตรวจสอบอัตโนมัติรายวัน</p>
-            <p class="text-xs text-slate-500 mb-2">ติดตั้ง Trigger ให้ระบบตรวจสอบวันหมดอายุ และครบกำหนดประกาศ 15 วัน อัตโนมัติทุกวัน</p>
-            <p class="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 mb-3">⚠️ ใช้งานครั้งแรก ระบบจะขอสิทธิ์เพิ่มเติม — ถ้ากดแล้วขึ้น Error เรื่อง "ไม่ได้รับอนุญาต" ให้ทำตามขั้นตอนที่แจ้งบนหน้าจอ (ต้องรันผ่าน Apps Script Editor ครั้งเดียว)</p>
-            <button onclick="runSetupTrigger()" class="w-full bg-blue-600 text-white text-xs font-bold py-2.5 rounded-lg hover:bg-blue-700">ติดตั้ง / อัปเดต Trigger</button>
+        <div class="text-left space-y-3 pt-1">
+          <div class="border border-line rounded-xl p-4">
+            <p class="font-semibold text-sm flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4 text-navy-600"></i> ตั้งเวลาตรวจสอบอัตโนมัติรายวัน</p>
+            <p class="text-xs text-muted mt-1 mb-2">ติดตั้ง Trigger ให้ระบบตรวจสอบวันหมดอายุ และครบกำหนดประกาศ 15 วัน อัตโนมัติทุกวัน</p>
+            <p class="text-[11px] text-gold-700 bg-gold-50 rounded-lg px-2.5 py-1.5 mb-3">ใช้งานครั้งแรก ระบบจะขอสิทธิ์เพิ่มเติม — ถ้ากดแล้วขึ้น Error เรื่อง "ไม่ได้รับอนุญาต" ให้ทำตามขั้นตอนที่แจ้งบนหน้าจอ (ต้องรันผ่าน Apps Script Editor ครั้งเดียว)</p>
+            <button onclick="runSetupTrigger()" class="w-full bg-navy-600 text-white text-sm font-semibold py-2.5 rounded-lg hover:bg-navy-700">ติดตั้ง / อัปเดต Trigger</button>
           </div>
-          <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-4">
-            <p class="font-bold text-sm text-emerald-900 mb-1">📧 ส่งอีเมลแจ้งเตือนซ้ำ (รอชำระเงิน)</p>
-            <p class="text-xs text-slate-500 mb-3">ส่งอีเมลแจ้งเตือนซ้ำให้สมาชิกทุกคนที่สถานะ "รอชำระเงิน" อยู่แล้วในระบบ (ใช้สำหรับ Backfill กรณีที่เคยพลาดการแจ้งเตือน)</p>
-            <button onclick="runResendReminder()" class="w-full bg-emerald-600 text-white text-xs font-bold py-2.5 rounded-lg hover:bg-emerald-700">ส่งอีเมลแจ้งเตือนซ้ำตอนนี้</button>
+          <div class="border border-line rounded-xl p-4">
+            <p class="font-semibold text-sm flex items-center gap-2"><i data-lucide="mail" class="w-4 h-4 text-sage-600"></i> ส่งอีเมลแจ้งเตือนซ้ำ (รอชำระเงิน)</p>
+            <p class="text-xs text-muted mt-1 mb-3">ส่งอีเมลแจ้งเตือนซ้ำให้สมาชิกทุกคนที่สถานะ "รอชำระเงิน" อยู่แล้วในระบบ (ใช้สำหรับ Backfill กรณีที่เคยพลาดการแจ้งเตือน)</p>
+            <button onclick="runResendReminder()" class="w-full bg-sage-600 text-white text-sm font-semibold py-2.5 rounded-lg hover:bg-sage-700">ส่งอีเมลแจ้งเตือนซ้ำตอนนี้</button>
           </div>
-        </div>
-      `,
-      showConfirmButton: false,
-      showCloseButton: true,
-      width: 480,
-      customClass: { popup: 'rounded-2xl' }
+        </div>`,
+      showConfirmButton: false, showCloseButton: true, width: 480,
+      didOpen: () => lucide.createIcons()
     });
   }
 
   function runSetupTrigger() {
     Swal.fire({ title: 'กำลังติดตั้ง Trigger...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     TUSW_API.call('setupDailyTrigger', {})
-      .then(msg => {
-        Swal.fire({ icon: 'success', title: 'สำเร็จ', text: msg, confirmButtonColor: '#059669' });
-      })
+      .then(msg => { Swal.fire({ icon: 'success', title: 'สำเร็จ', text: msg, confirmButtonColor: '#2f7a5a' }); })
       .catch(err => {
-        // ✅ ตรวจจับ error เรื่องสิทธิ์ ScriptApp.getProjectTriggers โดยเฉพาะ
-        const isAuthError = err.message && (err.message.includes('ไม่ได้รับอนุญาต') || err.message.includes('authorization') || err.message.includes('script.scriptapp'));
+        const isAuthError = err.message && (err.message.includes('ไม่ได้รับอนุญาต') || err.message.includes('authorization') || err.message.includes('script.scriptapp') || err.message.includes('permission'));
         if (isAuthError) {
           Swal.fire({
-            icon: 'warning',
-            title: 'ต้องขออนุญาตสิทธิ์ก่อนใช้งานครั้งแรก',
+            icon: 'warning', title: 'ต้องขออนุญาตสิทธิ์ก่อนใช้งานครั้งแรก',
             html: `
-              <div class="text-left text-sm space-y-3 px-2">
+              <div class="text-left text-sm space-y-3 px-1">
                 <p>ฟังก์ชันนี้ต้องการสิทธิ์ "จัดการ Trigger" ซึ่ง Google ยังไม่เคยขออนุญาตจากแอดมิน — ไม่สามารถขอผ่านหน้าเว็บนี้ได้ ต้องรันจาก Apps Script Editor โดยตรงเพียงครั้งเดียว ดังนี้</p>
-                <ol class="list-decimal list-inside space-y-2 bg-slate-50 p-3 rounded-lg">
+                <ol class="list-decimal list-inside space-y-2 bg-paper p-3 rounded-lg">
                   <li>เปิด <b>script.google.com</b> แล้วเข้าโปรเจกต์นี้</li>
                   <li>เปิดไฟล์ <b>Code.gs</b></li>
                   <li>เลือกฟังก์ชัน <b>setupDailyTrigger</b> จาก Dropdown ด้านบน (ข้าง ▷ Run)</li>
@@ -404,14 +409,11 @@
                   <li>จะมีหน้าต่าง "ต้องได้รับการอนุญาต" ขึ้นมา ให้กด <b>ตรวจสอบสิทธิ์ → เลือกบัญชี → Advanced → ไปที่หน้าโปรเจกต์ (ไม่ปลอดภัย) → อนุญาต</b></li>
                   <li>เมื่อรันสำเร็จ Trigger จะถูกติดตั้งถาวร ไม่ต้องทำซ้ำอีก แม้ Deploy เวอร์ชันใหม่ในอนาคต</li>
                 </ol>
-              </div>
-            `,
-            confirmButtonColor: '#d97706',
-            confirmButtonText: 'เข้าใจแล้ว',
-            width: 560
+              </div>`,
+            confirmButtonColor: '#a97c22', confirmButtonText: 'เข้าใจแล้ว', width: 560
           });
         } else {
-          Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: err.message, confirmButtonColor: '#dc2626' });
+          Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: err.message, confirmButtonColor: '#7d1f22' });
         }
       });
   }
@@ -420,30 +422,20 @@
     Swal.fire({
       title: 'ยืนยันการส่งอีเมลแจ้งเตือนซ้ำ?',
       text: 'ระบบจะส่งอีเมลไปยังสมาชิกทุกคนที่สถานะ "รอชำระเงิน" อยู่ในขณะนี้',
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'ส่งเลย',
-      cancelButtonText: 'ยกเลิก',
-      confirmButtonColor: '#059669'
+      icon: 'question', showCancelButton: true,
+      confirmButtonText: 'ส่งเลย', cancelButtonText: 'ยกเลิก', confirmButtonColor: '#2f7a5a'
     }).then((result) => {
       if (!result.isConfirmed) return;
       Swal.fire({ title: 'กำลังส่งอีเมล...', text: 'อาจใช้เวลาสักครู่หากมีสมาชิกจำนวนมาก', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
       TUSW_API.call('resendPaymentReminderToWaitingMembers', {})
         .then(res => {
           if (res.success) {
-            Swal.fire({
-              icon: 'success',
-              title: 'ส่งอีเมลสำเร็จ',
-              html: `ส่งสำเร็จ <b>${res.sentCount}</b> ราย<br>ข้าม (ไม่มีอีเมล) <b>${res.skippedCount}</b> ราย`,
-              confirmButtonColor: '#059669'
-            });
+            Swal.fire({ icon: 'success', title: 'ส่งอีเมลสำเร็จ', html: `ส่งสำเร็จ <b>${res.sentCount}</b> ราย<br>ข้าม (ไม่มีอีเมล) <b>${res.skippedCount}</b> ราย`, confirmButtonColor: '#2f7a5a' });
           } else {
-            Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: res.message || 'ไม่ทราบสาเหตุ', confirmButtonColor: '#dc2626' });
+            Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: res.message || 'ไม่ทราบสาเหตุ', confirmButtonColor: '#7d1f22' });
           }
         })
-        .catch(err => {
-          Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: err.message, confirmButtonColor: '#dc2626' });
-        });
+        .catch(err => { Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: err.message, confirmButtonColor: '#7d1f22' }); });
     });
   }
 </script>
