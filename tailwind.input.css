@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .card { @apply bg-white rounded-2xl border border-line shadow-[0_1px_2px_rgba(34,28,24,.04),0_12px_32px_-16px_rgba(34,28,24,.10)]; }
+  .sel { @apply block rounded-lg border border-line bg-white px-3 py-2.5 font-medium text-ink outline-none focus:border-brand-600 focus:ring-4 focus:ring-brand-600/10; }
+  .navbtn { @apply inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium transition; }
+  .stat-num { @apply text-5xl md:text-6xl font-bold tabular-nums tracking-tight mt-3; }
+}
+  

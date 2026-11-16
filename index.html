@@ -3,30 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>สถิติข้อมูลสมาชิก (Admin Dashboard)</title>
+  <title>สถิติข้อมูลสมาชิก — สมาคมนักศึกษาเก่าสังคมสงเคราะห์ศาสตร์ มธ.</title>
   <link rel="icon" type="image/png" href="https://img2.pic.in.th/cropped_circle_image4abd3ce094449065.png">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = { theme: { extend: {
-      colors: {
-        brand: { 50:'#fbf3f2', 100:'#f5e1df', 200:'#e9c2be', 600:'#9a2a2c', 700:'#7d1f22', 800:'#621719', 900:'#45100f' },
-        gold:  { 50:'#fbf6ea', 100:'#f6ecd6', 300:'#e2c27f', 400:'#d4a84b', 600:'#a97c22', 700:'#8a6418' },
-        navy:  { 50:'#eef3f8', 600:'#2f5d8a', 700:'#244a6f' },
-        sage:  { 50:'#edf6f1', 600:'#2f7a5a', 700:'#245f46' },
-        paper:'#f6f3ee', line:'#e6dfd5', ink:'#221c18', muted:'#6e655d'
-      },
-      fontFamily: { sans: ['"IBM Plex Sans Thai"', 'Sarabun', 'sans-serif'] }
-    } } };
-  </script>
-  <style type="text/tailwindcss">
-    @layer components {
-      .card { @apply bg-white rounded-2xl border border-line shadow-[0_1px_2px_rgba(34,28,24,.04),0_12px_32px_-16px_rgba(34,28,24,.10)]; }
-      .sel { @apply block rounded-lg border border-line bg-white px-3 py-2.5 font-medium text-ink outline-none focus:border-brand-600 focus:ring-4 focus:ring-brand-600/10; }
-      .navbtn { @apply inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium transition; }
-      .stat-num { @apply text-5xl md:text-6xl font-bold tabular-nums tracking-tight mt-3; }
-    }
-  </style>
   <style>
     body { -webkit-font-smoothing: antialiased; }
     .hidden { display: none; }
@@ -38,8 +17,10 @@
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://unpkg.com/lucide@1.73.0/dist/umd/lucide.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- Tailwind (prebuilt) — วางท้าย <head> ให้ลำดับ cascade เหมือน Play CDN เดิม -->
+  <link rel="stylesheet" href="styles.css?v=20261116">
 </head>
 <body class="bg-paper text-ink font-sans min-h-screen pb-16">
 
@@ -53,10 +34,11 @@
       </span>
     </button>
     <nav class="flex flex-wrap gap-1.5">
-      <button onclick="adminNavigate('members')" class="navbtn bg-white/10 hover:bg-white/20"><i data-lucide="users" class="w-4 h-4"></i> ฐานข้อมูลสมาชิก</button>
-      <button onclick="showSystemToolsMenu()" class="navbtn bg-gold-400 text-ink hover:bg-gold-300"><i data-lucide="settings" class="w-4 h-4"></i> เครื่องมือระบบ</button>
+      <button onclick="adminNavigate('members')" class="navbtn bg-white/10 hover:bg-white/20 admin-only hidden"><i data-lucide="users" class="w-4 h-4"></i> ฐานข้อมูลสมาชิก</button>
+      <button onclick="showSystemToolsMenu()" class="navbtn bg-gold-400 text-ink hover:bg-gold-300 admin-only hidden"><i data-lucide="settings" class="w-4 h-4"></i> เครื่องมือระบบ</button>
       <a href="https://members.tuswalumni.com/" target="_top" class="navbtn !text-white/80 hover:!text-white hover:bg-white/10 no-underline"><i data-lucide="globe" class="w-4 h-4"></i> หน้าหลัก</a>
-      <button onclick="adminLogout()" class="navbtn text-white/80 hover:bg-brand-700 hover:text-white"><i data-lucide="log-out" class="w-4 h-4"></i> ออกจากระบบ</button>
+      <button onclick="adminLogin()" class="navbtn text-white/80 hover:bg-white/10 hover:text-white guest-only"><i data-lucide="log-in" class="w-4 h-4"></i> เข้าสู่ระบบผู้ดูแล</button>
+      <button onclick="adminLogout()" class="navbtn text-white/80 hover:bg-brand-700 hover:text-white admin-only hidden"><i data-lucide="log-out" class="w-4 h-4"></i> ออกจากระบบ</button>
     </nav>
   </div>
   <div class="h-px bg-gold-400/60"></div>
@@ -184,11 +166,21 @@
   window.onload = function() {
     lucide.createIcons();
     setupYearFilter();
-    requireAdmin(() => updateDashboard());
+    // ✅ หน้าสถิติเปิดดูได้ทันทีโดยไม่ต้องล็อกอิน (ข้อมูลเป็นตัวเลขสรุป ไม่มีข้อมูลส่วนบุคคล)
+    // ล็อกอินผู้ดูแลเป็นทางเลือก — ใช้เฉพาะเมนู "ฐานข้อมูลสมาชิก" / "เครื่องมือระบบ"
+    const savedName = sessionStorage.getItem('adminName');
+    if (sessionStorage.getItem('adminToken') && savedName) setGreeting(savedName);
+    updateDashboard();
   };
 
-  // ✅ ใหม่: หน้านี้เดิมเปิดดูได้ทันทีโดยไม่ต้องเข้าสู่ระบบ — เพิ่มการล็อกอินแบบเดียวกับ MemberList
-  // (sessionStorage แยกตามโดเมน จึงต้องล็อกอินที่หน้านี้แยกอีกครั้ง)
+  // แสดง/ซ่อนเมนูสำหรับผู้ดูแล
+  function setAdminMode(isAdmin) {
+    document.querySelectorAll('.admin-only').forEach(el => el.classList.toggle('hidden', !isAdmin));
+    document.querySelectorAll('.guest-only').forEach(el => el.classList.toggle('hidden', isAdmin));
+  }
+  function adminLogin() { requireAdmin(() => {}); }
+
+  // ล็อกอินผู้ดูแล (sessionStorage แยกตามโดเมน จึงต้องล็อกอินที่หน้านี้แยกจาก MemberList)
   function requireAdmin(onReady) {
     const savedToken = sessionStorage.getItem('adminToken');
     const savedName = sessionStorage.getItem('adminName');
@@ -200,7 +192,8 @@
                <div><label class="text-xs font-medium text-muted">Username</label><input id="swal-username" class="w-full mt-1 rounded-lg border border-line px-3.5 py-2.5 outline-none focus:border-brand-600" placeholder="ระบุชื่อผู้ใช้" onkeydown="if(event.key==='Enter') document.querySelector('.swal2-confirm').click()"></div>
                <div><label class="text-xs font-medium text-muted">Password</label><input id="swal-password" type="password" class="w-full mt-1 rounded-lg border border-line px-3.5 py-2.5 outline-none focus:border-brand-600" placeholder="ระบุรหัสผ่าน" onkeydown="if(event.key==='Enter') document.querySelector('.swal2-confirm').click()"></div>
              </div>`,
-      focusConfirm: false, allowOutsideClick: false, allowEscapeKey: false,
+      focusConfirm: false, allowOutsideClick: true, allowEscapeKey: true,
+      showCancelButton: true, cancelButtonText: 'ยกเลิก',
       confirmButtonText: 'เข้าสู่ระบบ', confirmButtonColor: '#7d1f22',
       backdrop: 'rgba(34,28,24,.85)',
       preConfirm: () => {
@@ -230,6 +223,7 @@
   function setGreeting(name) {
     const el = document.getElementById('adminGreeting');
     if (el) el.textContent = 'ภาพรวม · ผู้ดูแล: ' + name;
+    setAdminMode(true);
   }
 
   function setupYearFilter() {
@@ -363,7 +357,10 @@
   function adminLogout() {
     sessionStorage.removeItem('adminToken');
     sessionStorage.removeItem('adminName');
-    window.top.location.href = ADMIN_URLS.memberList;
+    // อยู่หน้าสถิติต่อในโหมดผู้เยี่ยมชม (เดิมพาไปหน้า MemberList ซึ่งต้องล็อกอิน)
+    const el = document.getElementById('adminGreeting');
+    if (el) el.textContent = 'ภาพรวม';
+    setAdminMode(false);
   }
 
   // เครื่องมือระบบ — ตั้ง Trigger อัตโนมัติ + ส่งอีเมลแจ้งเตือนซ้ำ
