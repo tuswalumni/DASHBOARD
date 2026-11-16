@@ -144,6 +144,26 @@
           <div class="p-2.5 bg-navy-50 text-navy-600 rounded-lg"><i data-lucide="refresh-cw" class="w-5 h-5"></i></div>
         </div>
       </div>
+
+      <!-- ✅ ข้อมูลสมาชิกเก่า (ก่อนปี 2568) — นับจากชีต oldmembers ไม่ขึ้นกับตัวกรองปี/เดือน -->
+      <div class="card p-6 relative overflow-hidden">
+        <div class="absolute inset-x-0 top-0 h-1 bg-gold-400"></div>
+        <div class="flex justify-between items-start gap-3">
+          <div>
+            <p class="text-sm font-medium text-muted">ข้อมูลสมาชิกเก่า (ก่อนปี 2568)</p>
+            <p class="mt-1"><span id="oldMembersRemaining" class="text-4xl font-bold tabular-nums tracking-tight text-gold-700">0</span> <span class="text-sm text-muted">ราย</span></p>
+            <p class="text-xs text-muted mt-0.5">ยังไม่อัปเดตเข้าระบบใหม่</p>
+          </div>
+          <div class="p-2.5 bg-gold-50 text-gold-700 rounded-lg"><i data-lucide="archive" class="w-5 h-5"></i></div>
+        </div>
+        <div class="mt-4 h-2 rounded-full bg-paper overflow-hidden" role="progressbar" aria-label="สัดส่วนสมาชิกเก่าที่อัปเดตแล้ว" aria-valuemin="0" aria-valuemax="100" id="oldMembersBar" aria-valuenow="0">
+          <div id="oldMembersBarFill" class="h-full bg-sage-600 rounded-full transition-all duration-700" style="width:0%"></div>
+        </div>
+        <p class="text-xs text-muted mt-2 flex justify-between gap-2">
+          <span>อัปเดตแล้ว <b id="oldMembersMigrated" class="text-sage-700 tabular-nums">0</b> ราย</span>
+          <span class="text-muted/80">ไม่ขึ้นกับตัวกรอง</span>
+        </p>
+      </div>
     </div>
   </div>
 </div>
@@ -264,6 +284,15 @@
         animateValue("ascRevText", data.ascPaidRevenue);
         animateValue("expiredCount", data.expired);
 
+        // ✅ ข้อมูลสมาชิกเก่า (ก่อนปี 2568)
+        const oldLeft = data.oldMembersRemaining || 0, oldDone = data.oldMembersMigrated || 0;
+        animateValue("oldMembersRemaining", oldLeft);
+        document.getElementById('oldMembersMigrated').textContent = oldDone.toLocaleString();
+        const pct = (oldLeft + oldDone) ? Math.round(oldDone / (oldLeft + oldDone) * 100) : 0;
+        document.getElementById('oldMembersBarFill').style.width = pct + '%';
+        document.getElementById('oldMembersBar').setAttribute('aria-valuenow', pct);
+        document.getElementById('oldMembersBar').title = 'อัปเดตแล้ว ' + pct + '%';
+
         renderChart(data.ord, data.asc, data.hon, data.expired);
         if (data.monthlyRevenue) renderRevenueMonthlyChart(data.monthlyRevenue);
         lucide.createIcons();
@@ -380,10 +409,45 @@
             <p class="text-xs text-muted mt-1 mb-3">ส่งอีเมลแจ้งเตือนซ้ำให้สมาชิกทุกคนที่สถานะ "รอชำระเงิน" อยู่แล้วในระบบ (ใช้สำหรับ Backfill กรณีที่เคยพลาดการแจ้งเตือน)</p>
             <button onclick="runResendReminder()" class="w-full bg-sage-600 text-white text-sm font-semibold py-2.5 rounded-lg hover:bg-sage-700">ส่งอีเมลแจ้งเตือนซ้ำตอนนี้</button>
           </div>
+          <div class="border border-line rounded-xl p-4">
+            <p class="font-semibold text-sm flex items-center gap-2"><i data-lucide="archive" class="w-4 h-4 text-gold-700"></i> ตรวจข้อมูลค้างในฐานข้อมูลสมาชิกเก่า</p>
+            <p class="text-xs text-muted mt-1 mb-3">หาแถวในชีต oldmembers ที่ย้ายเข้าระบบใหม่แล้วแต่ยังค้างอยู่ (ตรวจอย่างเดียว ยังไม่ลบ)</p>
+            <button onclick="runAuditOldMembers(false)" class="w-full bg-gold-600 text-white text-sm font-semibold py-2.5 rounded-lg hover:bg-gold-700">ตรวจตอนนี้</button>
+          </div>
         </div>`,
       showConfirmButton: false, showCloseButton: true, width: 480,
       didOpen: () => lucide.createIcons()
     });
+  }
+
+  const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  // ✅ ตรวจ/ล้างแถวที่ค้างอยู่ใน oldmembers (ลบเฉพาะแถวที่เลขบัตรตรงกับสมาชิกในระบบใหม่)
+  function runAuditOldMembers(apply) {
+    Swal.fire({ title: apply ? 'กำลังลบแถวที่ค้าง...' : 'กำลังตรวจข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    TUSW_API.call('auditOldMembersLeftovers', { apply: apply === true })
+      .then(res => {
+        if (!res || res.success === false) throw new Error((res && res.message) || 'ตรวจไม่สำเร็จ');
+        const li = arr => arr.map(x => `<li>แถว ${x.row}: ${esc(x.name)} <span class="text-muted">→ ${esc(x.memberId || '-')}</span></li>`).join('');
+        const html = `<div class="text-left text-sm space-y-3">
+            <p>ชีต oldmembers มีข้อมูล <b>${res.total}</b> แถว${apply ? ` · ลบแล้ว <b>${res.deleted}</b> แถว` : ''}</p>
+            <div><p class="font-semibold">ค้างอยู่ — เลขบัตรตรงกับสมาชิกในระบบใหม่ (${res.confirmed.length})</p>
+              ${res.confirmed.length ? `<ul class="list-disc pl-5 max-h-40 overflow-auto text-xs mt-1">${li(res.confirmed)}</ul>` : '<p class="text-xs text-sage-700 mt-1">ไม่พบ ✓</p>'}</div>
+            <div><p class="font-semibold">ควรตรวจด้วยตา — ไม่มีเลขบัตร แต่ชื่อตรงกับสมาชิกที่ย้าย/นำเข้าแล้ว (${res.review.length})</p>
+              ${res.review.length ? `<ul class="list-disc pl-5 max-h-40 overflow-auto text-xs mt-1">${li(res.review)}</ul><p class="text-xs text-muted mt-1">ระบบไม่ลบกลุ่มนี้อัตโนมัติ — ถ้าเป็นคนเดียวกันจริง ลบแถวในชีตด้วยมือ</p>` : '<p class="text-xs text-sage-700 mt-1">ไม่พบ ✓</p>'}</div>
+          </div>`;
+        const canDelete = !apply && res.confirmed.length > 0;
+        Swal.fire({
+          icon: (res.confirmed.length || res.review.length) && !apply ? 'warning' : 'success',
+          title: apply ? 'ล้างข้อมูลเรียบร้อย' : 'ผลการตรวจ oldmembers', html: html, width: 560,
+          showCancelButton: canDelete, confirmButtonText: canDelete ? `ลบ ${res.confirmed.length} แถวที่ค้าง` : 'ปิด',
+          cancelButtonText: 'ปิด', confirmButtonColor: canDelete ? '#7d1f22' : '#221c18'
+        }).then(r => {
+          if (canDelete && r.isConfirmed) runAuditOldMembers(true);
+          else if (apply) updateDashboard();
+        });
+      })
+      .catch(err => Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: err.message, confirmButtonColor: '#7d1f22' }));
   }
 
   function runSetupTrigger() {
